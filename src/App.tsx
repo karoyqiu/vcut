@@ -64,7 +64,10 @@ function App() {
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture
         disableRemotePlayback
-        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+        onDurationChange={(e) => {
+          setDuration(e.currentTarget.duration);
+          form.reset({ start: '00:00:00.000', end: secondsToTime(e.currentTarget.duration) });
+        }}
       />
       <div className="flex flex-col gap-4 p-4">
         <Form {...form}>

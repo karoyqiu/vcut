@@ -1320,6 +1320,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tauri-apps/plugin-shell@npm:~2":
+  version: 2.2.0
+  resolution: "@tauri-apps/plugin-shell@npm:2.2.0"
+  dependencies:
+    "@tauri-apps/api": "npm:^2.0.0"
+  checksum: 10c0/8ea1570fae3ae2eff8bb950d4c598312751b7c58922b95a12a04f44ed7d3d2a37533e3f4b73c3bd11fe08a0fe1850975c2617c93e2831fb1cbe2bf4b103f81d0
+  languageName: node
+  linkType: hard
+
 "@trivago/prettier-plugin-sort-imports@npm:^5.2.2":
   version: 5.2.2
   resolution: "@trivago/prettier-plugin-sort-imports@npm:5.2.2"
@@ -2855,6 +2864,7 @@ __metadata:
     "@tauri-apps/cli": "npm:^2.4.0"
     "@tauri-apps/plugin-dialog": "npm:^2.2.0"
     "@tauri-apps/plugin-opener": "npm:^2.2.6"
+    "@tauri-apps/plugin-shell": "npm:~2"
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"
     "@types/node": "npm:^22.13.14"
     "@types/react": "npm:^19.0.12"
