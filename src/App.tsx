@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { Command } from '@tauri-apps/plugin-shell';
-import { Clapperboard, FolderOpen, Timer } from 'lucide-react';
+import { type Child, Command } from '@tauri-apps/plugin-shell';
+import { CircleX, Clapperboard, FolderOpen, Timer } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -65,10 +65,8 @@ const calcEta = (startedAt: number, progress: number) => {
     return '--';
   }
 
-  const now = Date.now();
-  const elapsed = now - startedAt;
-  const ete = (now - startedAt) / progress;
-  return nts((ete - elapsed) / 1000);
+  const eta = ((1 - progress) * (Date.now() - startedAt)) / progress / 1000;
+  return nts(eta);
 };
 
 function App() {
@@ -77,6 +75,7 @@ function App() {
   const [outputDuration, setOutputDuration] = useState(100);
   const [progress, setProgress] = useState(0);
   const [startedAt, setStartedAt] = useState(0);
+  const [ffmpeg, setFfmpeg] = useState<Child>();
   const video = useRef<HTMLVideoElement>(null);
   const form = useForm<z.infer<typeof spanSchema>>({
     resolver: zodResolver(spanSchema),
@@ -116,8 +115,9 @@ function App() {
               });
 
               if (outputFilename) {
+                const od = stn(values.end) - stn(values.start);
                 setProgress(0);
-                setOutputDuration(stn(values.end) - stn(values.start));
+                setOutputDuration(od);
 
                 const command = Command.sidecar('binaries/ffmpeg', [
                   '-y',
@@ -138,13 +138,21 @@ function App() {
                   const key = 'out_time_us=';
 
                   if (line.startsWith(key)) {
-                    const us = line.substring(key.length);
-                    console.log(line, parseFloat(us) / 1000000);
-                    setProgress(parseFloat(us) / 1000000);
+                    const value = line.substring(key.length);
+                    const us = parseFloat(value) || 0;
+                    setProgress(us / 1000000);
                   }
                 });
+                command.on('close', () => {
+                  console.timeEnd('ffmpeg');
+                  setProgress(od);
+                  setFfmpeg(undefined);
+                });
+
                 const child = await command.spawn();
+                console.time('ffmpeg');
                 setStartedAt(Date.now());
+                setFfmpeg(child);
               }
             })}
           >
@@ -164,7 +172,7 @@ function App() {
                           step={0.001}
                           min={'00:00:00.000'}
                           max={values.end}
-                          disabled={!video.current?.src}
+                          disabled={!video.current?.src || !!ffmpeg}
                         />
                       </FormControl>
                       <Tooltip>
@@ -174,7 +182,7 @@ function App() {
                             type="button"
                             size="icon"
                             variant="outline"
-                            disabled={!video.current?.src}
+                            disabled={!video.current?.src || !!ffmpeg}
                             onClick={() =>
                               form.setValue('start', nts(video.current?.currentTime ?? 0))
                             }
@@ -204,7 +212,7 @@ function App() {
                           step={0.001}
                           min={values.start}
                           max={nts(inputDuration)}
-                          disabled={!video.current?.src}
+                          disabled={!video.current?.src || !!ffmpeg}
                         />
                       </FormControl>
                       <Tooltip>
@@ -214,7 +222,7 @@ function App() {
                             type="button"
                             size="icon"
                             variant="outline"
-                            disabled={!video.current?.src}
+                            disabled={!video.current?.src || !!ffmpeg}
                             onClick={() =>
                               form.setValue('end', nts(video.current?.currentTime ?? 0))
                             }
@@ -233,6 +241,7 @@ function App() {
             <div className="flex items-center gap-2">
               <Button
                 type="button"
+                disabled={!!ffmpeg}
                 onClick={async () => {
                   const file = await open({
                     filters: [
@@ -252,15 +261,30 @@ function App() {
                 <FolderOpen />
                 Select video file
               </Button>
-              <Button
-                type="submit"
-                disabled={!form.formState.isValid && form.formState.isSubmitting}
-              >
-                <Clapperboard />
-                Cut
-              </Button>
-              <div className="flex grow flex-col gap-1">
-                <p className="font-mono text-sm text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, ETA ${calcEta(startedAt, progress / outputDuration)}`}</p>
+              {ffmpeg ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    if (ffmpeg) {
+                      ffmpeg.kill();
+                    }
+                  }}
+                >
+                  <CircleX />
+                  Abort
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={!form.formState.isValid && form.formState.isSubmitting}
+                >
+                  <Clapperboard />
+                  Cut
+                </Button>
+              )}
+              <div className="flex grow flex-col gap-0.5">
+                <p className="font-mono text-xs text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, ETA ${calcEta(startedAt, progress / outputDuration)}`}</p>
                 <Progress max={outputDuration} value={progress} />
               </div>
             </div>
