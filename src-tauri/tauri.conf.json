@@ -12,17 +12,34 @@
   "app": {
     "windows": [
       {
-        "title": "vcut",
-        "width": 800,
-        "height": 600
+        "title": "vCut",
+        "width": 1200,
+        "height": 700,
+        "useHttpsScheme": true
       }
     ],
     "security": {
-      "csp": null
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
+      },
+      "csp": {
+        "default-src": ["'self'"],
+        "connect-src": ["ipc:", "http://ipc.localhost", "https://ipc.localhost"],
+        "img-src": ["'self'", "https:", "data:"],
+        "media-src": ["asset:", "http://asset.localhost", "https://asset.localhost"],
+        "style-src": [
+          "'self'",
+          "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='",
+          "'sha256-qixoDh78J8vISHKC3rLI7qSXmTShr8mhsUgjJL7W7aU='",
+          "'sha256-3gJFr3n77fnX5qwQpGju/zCOsoHW5RMqQd5XOb9WFcA='",
+          "'sha256-K/NeD53vB+5+2jizTdfGGkVkvm4CMfXJ5UTuQOzO8sY='"
+        ]
+      }
     }
   },
   "bundle": {
-    "active": true,
+    "active": false,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
