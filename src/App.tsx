@@ -122,7 +122,6 @@ function App() {
             className="flex flex-col gap-4"
             onSubmit={form.handleSubmit(async (values) => {
               const outputFilename = await save({
-                defaultPath: inputFilename,
                 filters: [
                   {
                     extensions: ['webm', 'mp4', 'wmv', 'mpg', 'mov', 'mpeg', 'm4v', 'avi'],
@@ -143,12 +142,12 @@ function App() {
                   '-nostats',
                   '-loglevel',
                   'error',
-                  '-i',
-                  inputFilename,
                   '-ss',
                   values.start,
                   '-to',
                   values.end,
+                  '-i',
+                  inputFilename,
                   '-c',
                   'copy',
                   outputFilename,
@@ -303,7 +302,7 @@ function App() {
                 </Button>
               )}
               <div className="flex grow flex-col gap-0.5">
-                <p className="font-mono text-xs text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, ETA ${calcEta(startedAt, progress / outputDuration)}`}</p>
+                <p className="font-mono text-xs text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, elapsed ${nts((Date.now() - startedAt) / 1000)}, ETA ${calcEta(startedAt, progress / outputDuration)}`}</p>
                 <Progress max={outputDuration} value={progress} />
               </div>
             </div>
