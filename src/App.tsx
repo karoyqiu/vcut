@@ -3,8 +3,9 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { type Child, Command } from '@tauri-apps/plugin-shell';
 import { CircleX, Clapperboard, FolderOpen, Timer } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTernaryDarkMode } from 'usehooks-ts';
 import { z } from 'zod';
 
 import '@/App.css';
@@ -77,6 +78,7 @@ function App() {
   const [startedAt, setStartedAt] = useState(0);
   const [ffmpeg, setFfmpeg] = useState<Child>();
   const video = useRef<HTMLVideoElement>(null);
+  const { ternaryDarkMode } = useTernaryDarkMode({ localStorageKey: 'dark-mode' });
   const form = useForm<z.infer<typeof spanSchema>>({
     resolver: zodResolver(spanSchema),
     defaultValues: {
@@ -85,6 +87,21 @@ function App() {
     },
   });
   const values = form.watch();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (ternaryDarkMode === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(ternaryDarkMode);
+    }
+  }, [ternaryDarkMode]);
 
   return (
     <main className="flex flex-col gap-4">
@@ -132,6 +149,8 @@ function App() {
                   values.start,
                   '-to',
                   values.end,
+                  '-c',
+                  'copy',
                   outputFilename,
                 ]);
                 command.stdout.on('data', (line) => {
