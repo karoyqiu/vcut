@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { ProgressBarStatus, getCurrentWindow } from '@tauri-apps/api/window';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { type Child, Command } from '@tauri-apps/plugin-shell';
 import { CircleX, Clapperboard, FolderOpen, Timer } from 'lucide-react';
@@ -70,6 +71,8 @@ const calcEta = (startedAt: number, progress: number) => {
   return nts(eta);
 };
 
+const appWindow = getCurrentWindow();
+
 function App() {
   const [inputFilename, setInputFilename] = useState('');
   const [inputDuration, setInputDuration] = useState(0);
@@ -138,6 +141,11 @@ function App() {
                 setProgress(0);
                 setOutputDuration(od);
 
+                await appWindow.setProgressBar({
+                  status: ProgressBarStatus.Normal,
+                  progress: 0,
+                });
+
                 const command = Command.sidecar('binaries/ffmpeg', [
                   '-y',
                   '-progress',
@@ -155,19 +163,28 @@ function App() {
                   'copy',
                   outputFilename,
                 ]);
-                command.stdout.on('data', (line) => {
+
+                command.stdout.on('data', async (line) => {
                   const key = 'out_time_us=';
 
                   if (line.startsWith(key)) {
                     const value = line.substring(key.length);
-                    const us = parseFloat(value) || 0;
-                    setProgress(us / 1000000);
+                    const us = (parseFloat(value) || 0) / 1000000;
+                    setProgress(us);
+
+                    await appWindow.setProgressBar({
+                      status: ProgressBarStatus.Normal,
+                      progress: Math.round((us * 100) / od),
+                    });
                   }
                 });
-                command.on('close', () => {
+
+                command.on('close', async () => {
                   console.timeEnd('ffmpeg');
                   setProgress(od);
                   setFfmpeg(undefined);
+
+                  await appWindow.setProgressBar({ status: ProgressBarStatus.None });
                 });
 
                 const child = await command.spawn();

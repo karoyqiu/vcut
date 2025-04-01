@@ -5,8 +5,9 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default",
+    "core:window:allow-set-progress-bar",
     "dialog:default",
+    "opener:default",
     "shell:allow-kill",
     {
       "identifier": "shell:allow-spawn",
