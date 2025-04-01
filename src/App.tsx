@@ -103,6 +103,9 @@ function App() {
     }
   }, [ternaryDarkMode]);
 
+  const elpased = startedAt > 0 ? nts((Date.now() - startedAt) / 1000) : '--';
+  const eta = startedAt > 0 ? calcEta(startedAt, progress / outputDuration) : '--';
+
   return (
     <main className="flex flex-col gap-4">
       <video
@@ -302,7 +305,7 @@ function App() {
                 </Button>
               )}
               <div className="flex grow flex-col gap-0.5">
-                <p className="font-mono text-xs text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, elapsed ${nts((Date.now() - startedAt) / 1000)}, ETA ${calcEta(startedAt, progress / outputDuration)}`}</p>
+                <p className="font-mono text-xs text-muted-foreground">{`Progress: ${percent.format(progress / outputDuration)}, elapsed ${elpased}, ETA ${eta}`}</p>
                 <Progress max={outputDuration} value={progress} />
               </div>
             </div>
