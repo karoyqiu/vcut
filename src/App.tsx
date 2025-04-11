@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import beep from '@/lib/beep';
 
 const pad = (value: number, maxLength = 2) => value.toString().padStart(maxLength, '0');
 
@@ -184,6 +185,7 @@ function App() {
                   setProgress(od);
                   setFfmpeg(undefined);
 
+                  beep();
                   await appWindow.setProgressBar({ status: ProgressBarStatus.None });
                 });
 
